@@ -9,16 +9,13 @@
     v-model="show"
     @cancel="cancelUpdatePassword"
     @ok="handleUpdatePassword">
-    <a-form :autoFormCreate="(form)=>{this.form = form}">
+    <a-form :form="form">
       <a-form-item
         label='旧密码'
-        v-bind="formItemLayout"
-        fieldDecoratorId="oldPassword"
-        :fieldDecoratorOptions="{rules: [{ required: true, message: '请输入旧密码'}, { validator: this.handleOldPassowrd }], validateTrigger: ['blur']}">
+        v-bind="formItemLayout">
         <a-input type="password"
                  autocomplete="false"
-                 v-model="oldPassword"
-                 placeholder="请输入旧密码"></a-input>
+                 placeholder="请输入旧密码" v-decorator="['oldPassword',{rules: [{ required: true, message: '请输入旧密码'}, { validator: this.handleOldPassowrd }], validateTrigger: ['blur']}]"></a-input>
       </a-form-item>
       <a-popover placement="rightTop" trigger="click" :visible="state.passwordLevelChecked">
         <template slot="content">
@@ -32,22 +29,17 @@
         </template>
         <a-form-item
           label='新密码'
-          v-bind="formItemLayout"
-          fieldDecoratorId="password"
-          :fieldDecoratorOptions="{rules: [{ required: true, message: '至少6位密码，区分大小写'}, { validator: this.handlePasswordLevel }], validateTrigger: ['change', 'blur']}">
+          v-bind="formItemLayout">
           <a-input type="password"
                    @click="handlePasswordInputClick"
-                   v-model="newPassword"
                    autocomplete="false"
-                   placeholder="至少6位密码，区分大小写"></a-input>
+                   placeholder="至少6位密码，区分大小写" v-decorator="['password',{rules: [{ required: true, message: '至少6位密码，区分大小写'}, { validator: this.handlePasswordLevel }], validateTrigger: ['change', 'blur']}]"></a-input>
         </a-form-item>
       </a-popover>
       <a-form-item
         label='再次确认'
-        v-bind="formItemLayout"
-        fieldDecoratorId="password2"
-        :fieldDecoratorOptions="{rules: [{ required: true, message: '至少6位密码，区分大小写' }, { validator: this.handlePasswordCheck }], validateTrigger: ['change', 'blur']}">
-        <a-input type="password" autocomplete="false" placeholder="确认密码"></a-input>
+        v-bind="formItemLayout">
+        <a-input type="password" autocomplete="false" placeholder="确认密码" v-decorator="['password2',{rules: [{ required: true, message: '至少6位密码，区分大小写' }, { validator: this.handlePasswordCheck }], validateTrigger: ['change', 'blur']}]"></a-input>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -78,6 +70,9 @@ const levelColor = {
 }
 
 export default {
+  beforeCreate () {
+    this.form = this.$form.createForm(this)
+  },
   props: {
     updatePasswordModelVisible: {
       default: false
@@ -88,7 +83,7 @@ export default {
   },
   data () {
     return {
-      form: null,
+      // form: null,
       formItemLayout,
       state: {
         passwordLevel: 0,
@@ -96,8 +91,8 @@ export default {
         percent: 10,
         progressColor: '#FF0000'
       },
-      oldPassword: '',
-      newPassword: '',
+      // oldPassword: '',
+      // newPassword: '',
       validateStatus: '',
       help: ''
     }
@@ -132,8 +127,9 @@ export default {
     handleUpdatePassword () {
       this.form.validateFields((err, values) => {
         if (!err) {
+          let newPassword = this.form.getFieldValue('password')
           this.$put('user/password', {
-            password: this.newPassword,
+            password: newPassword,
             username: this.user.username
           }).then(() => {
             this.state.passwordLevelChecked = false
@@ -189,8 +185,8 @@ export default {
       this.state.passwordLevelChecked = false
     },
     handleOldPassowrd (rule, value, callback) {
-      let password = this.oldPassword
-      if (this.oldPassword.trim().length) {
+      let password = this.form.getFieldValue('oldPassword')
+      if (typeof password !== 'undefined' && password.trim().length) {
         this.$get('user/password/check', {
           password: password,
           username: this.user.username

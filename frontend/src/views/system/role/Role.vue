@@ -45,6 +45,7 @@
       <!-- 表格区域 -->
       <a-table ref="TableInfo"
                :columns="columns"
+               :rowKey="record => record.roleId"
                :dataSource="dataSource"
                :pagination="pagination"
                :loading="loading"
@@ -215,9 +216,8 @@ export default {
         centered: true,
         onOk () {
           let roleIds = []
-          for (let key of that.selectedRowKeys) {
-            roleIds.push(that.dataSource[key].roleId)
-          }
+          let selectedRowKeysStr = ',' + that.selectedRowKeys.join(',') + ','
+          roleIds.push(that.dataSource.filter(f => { return selectedRowKeysStr.indexOf(',' + f.roleId + ',') > -1 }).map(m => { return m.roleId }))
           that.$delete('role/' + roleIds.join(',')).then(() => {
             that.$message.success('删除成功')
             that.selectedRowKeys = []
